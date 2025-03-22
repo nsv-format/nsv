@@ -78,7 +78,7 @@ I see now that I can't really write a spec and end up yapping instead.
 Well, then, here's an example.
 
 ```nsv
-v1
+v:1.0
 table:4
 # Yappy yappy yap
 ---
@@ -103,6 +103,7 @@ The order does not matter, with the sole exception of version label, which shall
 
 Lines that start with `//`, `#`, or `--` **do not and never will** have any special meaning under this standard.
 As such, you can use those to comment or keep any amount of metadata.
+Lines that start with `x-` will also be ignored as a consideration for extensions.
 
 Some strings would then be further interpreted to have special meaning.
 The only special string formats used right now are a literal label and `key:value`, both being alphanumeric, but one should not assume it will be limited to just that.
@@ -118,8 +119,6 @@ Likely
 - specifying column types in metadata
 
 Under consideration
-- heredoc-like syntax for multiline inclusions
-- allowing a single multiline field per element if the schema is explicitly provided
 - comment support in the data paragraphs themselves
 
 ### Version compatibility considerations
@@ -130,6 +129,7 @@ The implementations are encouraged to match major and minor version of the highe
 For an implementation to "support" a given spec version, it must
 1. Support **all** required labels
 2. **If** it interprets any optional labels, it must match the semantics described in spec exactly
+3. Provide a way to view the full list of optional features, with indication of which ones are implemented (in whichever way is appropriate for the technology)
 
 Major version bumps are reserved for changes that would break existing implementation.
 A breakage means "the tool cannot interpret the file while omitting it's optional labels".

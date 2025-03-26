@@ -4,8 +4,10 @@
 
 - Better Git diffs
 - More flexibility for annotations
-- Simpler implementations
+- Simpler implementation
 - Better navigation in vim-like tools
+
+See [more](./pitches.md).
 
 ## Why? (history)
 
@@ -23,9 +25,9 @@ Enter NSV.
 As naming should suggest, the main idea is to do what a CSV does, but separate fields with a newline.
 Rows are then separated with a pair of newlines (at this point we have to introduce the empty field token).
 I thought of it as a funny idea that probably had lots of issues, otherwise why wouldn't it be around.
-But I told it to Claude and he said he knows no encoding format similar to what I was describing, and that brings us here.
+But Claude said he knows no encoding format similar to what I was describing, and that brings us here.
 The more we iterated on it, the more it made sense, and the less made its absence.
-So here I am, bringing yet another encoding format into this accursed development world of today.
+So here I am, bringing yet another encoding format into the accursed development world of today.
 
 ## Is this to CSV what CSV is to TSV?
 
@@ -34,30 +36,31 @@ Iterating on it a bit made me realise that I'd have to reimplement all the commo
 
 So first, NSV is not a "table" format.
 What is encoded is a "sequence of sequences".
-Exactly one layer of nesting, and if all the nested ones happen to have same length — that's a table!
-(I'm fending off the desire to call the nested ones "subsequences" but the word exists so I shall suffer.)
+*Exactly one* layer of nesting, and if all the nested ones happen to have same length — that's a table!
+(I'm fighting off the desire to call the nested ones "subsequences" but the word exists, so I shall suffer.)
 
 Second, I am not going to allow arbitrary text.
-Making *SV formats deal with raw text was a horrible decision, and people duly abused it as one would expect.
+Making something-SV formats deal with raw text was a horrible decision, and people duly abused it as one would expect.
 This one shall not make that mistake.
 You wish to have arbitrary text?
 Sanitize your newlines as you will.
 
-Lastly, I indend to allow for somewhat richer metadata.
+Lastly, I intend to allow for somewhat richer metadata.
 
 ## Specification
 
 Never wrote a rigorous one, so bear with me or better yet suggest improvements.
 
-Starting from the top, there is a split into header with metadata and the data itself.
+Starting from the top, there is a split into header with metadata and the body with the data itself.
+I will refer to individual nested sequences as "rows" and individual fields in them as "cells" even when they do not form a table.
 
-The metadata is not optional and ends at first `\n---\n` encountered in file.
+The header is *not optional* and ends at first `\n---\n` encountered in file.
 One may recognise this as being heavily reminiscent of Markdown frontmatter, except for lacking opening horizontal rule.
-Since we're starting fresh there's no requirement to be able to parse data that may not contain it, and I would want at least the version to be there for future compatibility.
+Since we're starting fresh, there's no requirement to be able to parse data that may not contain the header, and we'd want at least the version to be there for future compatibility.
 
-The general parsing rule for the data paragraphs is as following
+The general parsing rule for the body ("simple rule" hereafter) is as following
 1. Split on double newline to get rows
-2. Split each on single newline to get values
+2. Split each on single newline to get cells
 3. Apply type conversions, if you need any
 4. Pat yourself on the back
 

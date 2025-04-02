@@ -107,3 +107,20 @@ After struggling for a bit, the way I see it that there's (at least) three parts
 
 So who exactly is promising backward and forward compatibility to whom? I'm confused.
 
+### Not including explicit escaping rules
+
+Did not strike me as obvious until I wrote tests, but not specifying how newlines inside cells should be escaped would lead to a lot of variability between implementations and be a pain to deal with down the line.
+
+Now, given that the `\`-based escaping seems preferable, the minimal set of escape sequences should be one for the newline and one to escape the escaping itself, i.e. `\n` and `\\`.
+
+A bigger question is how to handle what appears to be an unrecognized sequence.
+The options are at least
+1. fail on unrecognized sequence
+2. ignore, discard the escape character
+3. ignore, let the escape character through
+
+The first one appears too painful, even if failure were limited to a cell, what to do with it, warn?
+The second one… is fine, that's what renderers use often, but what if the sequence was there for a reason? How would the reader know that there was an escape character, to maybe fix the issue on their side?
+So I'll settle for the last.
+In principle, that would mean that the parsers would be able to encode and decode more escape sequences if they choose so, which is good.
+The spec would have to clearly indicate that the parser should not fail because of escape sequences it is unfamiliar with.

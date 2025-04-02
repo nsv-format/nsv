@@ -1,5 +1,7 @@
 # Newline-separated values
 
+STATUS: Draft, pre-1.0
+
 ## Why? (advantages)
 
 - Better Git diffs
@@ -7,7 +9,7 @@
 - Simpler implementation
 - Better navigation in vim-like tools
 
-See [more](./pitches.md).
+See more [pitches](./pitches.md).
 
 ## Why? (history)
 
@@ -47,73 +49,110 @@ Sanitize your newlines as you will.
 
 Lastly, I intend to allow for somewhat richer metadata.
 
+See even more [yapping](./yapping.md).
+
 ## Specification
 
 Never wrote a rigorous one, so bear with me or better yet suggest improvements.
 
-Starting from the top, there is a split into header with metadata and the body with the data itself.
-I will refer to individual nested sequences as "rows" and individual fields in them as "cells" even when they do not form a table.
+An NSV file has two parts with distinct processing rules
+1. Header, containing metadata
+2. Body, containing the data itself
 
 The header is *not optional* and ends at first `\n---\n` encountered in file.
-One may recognise this as being heavily reminiscent of Markdown frontmatter, except for lacking opening horizontal rule.
-Since we're starting fresh, there's no requirement to be able to parse data that may not contain the header, and we'd want at least the version to be there for future compatibility.
+<!-- One may recognise this as being heavily reminiscent of Markdown frontmatter, except for lacking opening horizontal rule. -->
+<!-- Since we're starting fresh, there's no requirement to be able to parse data that may not contain the header, and we'd want at least the version to be there for future compatibility. -->
+
+### Header
+
+Each line in the header is interpreted as a literal string.
+Implementations MUST preserve the order of lines in the header when they write a previously read file.
+
+Lines that match a known pattern MUST be interpreted according to its processing rule.
+<!-- Writers SHOULD attempt to place the version label before other known labels, so as to aid the parser. -->
+
+Lines that start with `//`, `#`, `(`, `[`, `{`, or `-- ` **do not and never will** have any special meaning under this specification.
+As such, you can use those to comment or keep any amount of metadata.
+Lines that start with `x-` will also be ignored as a consideration for extensions.
+
+ Pattern             | Interpretation                | Since | Example   | Note     
+---------------------|-------------------------------|-------|-----------|----------
+ `v:<major>.<minor>` | Version number                | 1.0   | `v:1.0`   | Required 
+ `table:<number>`    | Table with `<number>` columns | 1.1   | `table:4` |
+
+<!-- `table:<number>` indicates that the file is supposed to represent a table of `<number>` columns; if a row has a mismatched number of cells, it is to be considered invalid. -->
+
+### Body
+
+Individual nested sequences are called "rows" and individual elements in them are called "cells" even when they do not form a table.
+
+ col1 | col2 
+------|------
+ r1c1 | r1c2 
+ r2c1 | r2c2 
+
+```csv
+r1c1,r1c2
+r2c1,r2c2
+```
+
+```nsv
+r1c1
+r1c2
+
+r2c1
+r2c2
+```
 
 The general parsing rule for the body ("simple rule" hereafter) is as following
 1. Split on double newline to get rows
 2. Split each on single newline to get cells
-3. Apply type conversions, if you need any
-4. Pat yourself on the back
+3. Escape special characters in each cell
 
 The format itself is data type-agnostic.
-Everything is a string, and you are to make sense of them yourself, however you see fit.
-For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`.
+Everything is a string, and interpretation of those strings is up to the reader.
+<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
 
 Fields that contain no value, and would normally be represented as an empty string, must be explicitly represented with a single backslash.
-While the specification does not (yet) specify how escaping should be done, implementers are encouraged to use `\n` and co., `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding.
-As to why the token is needed in the first place: we need it to make parsing unambiguous while retaining the simplicity of implementation.
+Literal `\`s MUST be replaced with literal `\\`.
+Newlines MUST be replaced with literal `\n`.
+<!-- `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding. -->
+<!-- As to why the token is needed in the first place: we need it to make parsing unambiguous while retaining the simplicity of implementation. -->
 
-Empty paragraphs, i.e. sequences of 2N consequtive newlines, are to be considered valid sequences of zero elements.
+Writers MAY escape additional special characters, as long as it does not interfere with `\n` and `\\`.
+Readers SHOULD ignore escape sequences they do not recognise, passing them through with the literal backslash.
+
+Empty paragraphs, i.e. sequences of 2N consecutive newlines, are to be considered valid sequences of zero elements.
 A sequence of 2N+1 newlines is to be considered invalid.
-Arbitrary sequences of consecutive newlines are allowed in the header.
-At most one newline is allowed immediately after the header-data separator.
 
-I see now that I can't really write a spec and end up yapping instead.
-Well, then, here's an example.
-
+An example
 ```nsv
 v:1.0
-table:4
 # Yappy yappy yap
 ---
 first
-group
-of
-elements
+row
 
 second
-group
-of
-elements
+row
 
-one
-with
+missing ->
 \
-field
+<- missing
+
+Roses are red\nViolets are blue\nThis may be pain\nBut CSV would be, too
+Tab\tseparated\tvalues\n(would be left as-is normally)
+Not a newline: \\n
 ```
 
-Each line in the header is taken as a literal string.
-The order does not matter, with the sole exception of version label, which shall be first (so as to aid the parser with interpreting the rest of metadata lines).
+This would roughly correspond to the following Markdown table (NSV is not a table though)
 
-Lines that start with `//`, `#`, or `--` **do not and never will** have any special meaning under this standard.
-As such, you can use those to comment or keep any amount of metadata.
-Lines that start with `x-` will also be ignored as a consideration for extensions.
-
-Some strings would then be further interpreted to have special meaning.
-The only special string formats used right now are a literal label and `key:value`, both being alphanumeric, but one should not assume it will be limited to just that.
-
-As for those with special meaning:
-- `v:<major>.<minor>` indicates the version number (only `v:1.0` is valid at the time of writing) and is **the only required parameter**
-- `table:<number>` indicates that the file is supposed to represent a table of `<number>` columns; if a paragraph has a mismatched number of fields, it is to be considered invalid
+ 0                                                                              | 1                                                        | 2                 
+--------------------------------------------------------------------------------|----------------------------------------------------------|-------------------
+ first                                                                          | row                                                      
+ second                                                                         | row                                                      
+ missing ->                                                                     |                                                          | <- missing        
+ Roses are red<br>Violets are blue<br>This may be pain<br>But CSV would be, too | Tab\tseparated\tvalues<br>(would be left as-is normally) | Not a newline: \n 
 
 ### Possible future extensions
 
@@ -135,8 +174,7 @@ For an implementation to "support" a given spec version, it must
 3. Provide a way to view the full list of optional features, with indication of which ones are implemented (in whichever way is appropriate for the technology)
 
 Major version bumps are reserved for changes that would break existing implementation.
-A breakage means "the tool cannot interpret the file while omitting it's optional labels".
+A breakage means "the tool cannot interpret the file while omitting its optional labels".
 This would normally be reserved to changes in required label list or general parsing logic changes.
 
 Minor version bumps would then correspond to changes in optional features.
-

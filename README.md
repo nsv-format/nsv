@@ -67,6 +67,7 @@ The header is *not optional* and ends at first `\n---\n` encountered in file.
 
 Each line in the header is interpreted as a literal string.
 Implementations MUST preserve the order of lines in the header when they write a previously read file.
+<!-- This weird one is a consideration for comments. -->
 
 Lines that match a known pattern MUST be interpreted according to its processing rule.
 <!-- Writers SHOULD attempt to place the version label before other known labels, so as to aid the parser. -->
@@ -105,13 +106,21 @@ r2c2
 ```
 
 The general parsing rule for the body ("simple rule" hereafter) is as following
-1. Split on double newline to get rows
+1. Split on consecutive newlines to get rows
 2. Split each on single newline to get cells
 3. Escape special characters in each cell
 
-The format itself is data type-agnostic.
-Everything is a string, and interpretation of those strings is up to the reader.
-<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
+#### 1. Split on consecutive newlines to get rows
+
+A newline immediately following another newline always indicates that a row was completed, even if said row was empty.
+Two newlines would mean that a row has ended, three that an empty row followed after that.
+A table would not contain zero-cell rows, so the rule would degenerate into splitting on double newlines.
+
+#### 2. Split each on single newline to get cells
+
+Nothing to add.
+
+#### 3. Escape special characters in each cell
 
 Fields that contain no value, and would normally be represented as an empty string, must be explicitly represented with a single backslash.
 Literal `\`s MUST be replaced with literal `\\`.
@@ -122,10 +131,14 @@ Newlines MUST be replaced with literal `\n`.
 Writers MAY escape additional special characters, as long as it does not interfere with `\n` and `\\`.
 Readers SHOULD ignore escape sequences they do not recognise, passing them through with the literal backslash.
 
-Empty paragraphs, i.e. sequences of 2N consecutive newlines, are to be considered valid sequences of zero elements.
-A sequence of 2N+1 newlines is to be considered invalid.
+#### Data types
 
-An example
+The format itself is data type-agnostic.
+Everything is a string, and interpretation of those strings is up to the reader.
+<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
+
+#### An example
+
 ```nsv
 v:1.0
 # Yappy yappy yap

@@ -107,6 +107,8 @@ After struggling for a bit, the way I see it that there's (at least) three parts
 
 So who exactly is promising backward and forward compatibility to whom? I'm confused.
 
+<!-- TODO -->
+
 ### Not including explicit escaping rules
 
 Did not strike me as obvious until I wrote tests, but not specifying how newlines inside cells should be escaped would lead to a lot of variability between implementations and be a pain to deal with down the line.
@@ -124,3 +126,37 @@ The second one… is fine, that's what renderers use often, but what if the sequ
 So I'll settle for the last.
 In principle, that would mean that the parsers would be able to encode and decode more escape sequences if they choose so, which is good.
 The spec would have to clearly indicate that the parser should not fail because of escape sequences it is unfamiliar with.
+
+### Simple rule, empty rows
+
+One miss that costed me some time was overly focusing on the "split on double newline, split on newline" rule.
+The Python implementation of that would look tastily trivial, and it still does, but only for tables.
+With arbitrary seqseqs, and specifically with empty rows, it doesn't fly as well.
+
+First, I erroneously decided to keep a single extra newline to represent an empty row.
+This does fit with "split on double newline" part, but causes all sorts of problems in implementation.
+And no less importantly, it doesn't really match the logic: if the row of N cells is represented by N lines and delimited by an empty line, then the row with 0 cells should be 0 lines and the delimiter, not 1 empty row.
+In "simple" version of logic, odd-length sequences of newlines were not matching anything meaningful as they could not have been produced by a proper writer.
+
+Second, I didn't properly consider end of file.
+Before writing a bunch of tests for empty rows in various quantities and positions, I didn't notice that some cases were unresolvable.
+Originally, I've thought that I could make newline before EOF optional, or rather have exactly one before the end.
+A helpful thing there was a change of perception: if you view the newline symbol as end token of a cell/row, i.e. as a part of the line it is ending, a lot of pieces fall into place.
+Now, we know that a row ended once we encounter an empty line, and that is important for the incremental consumption: imagine a catching up to a stream that sends the contents line-by-line.
+It signals that it got no more, but how do you know if the row you're on is completed?
+You could of course wait until a newline follows — but what if it doesn't?
+Could well be the case if the empty line after last cell were not required.
+
+Honestly, this empty-row edge case took me probably more time than any other part, and I'm still not sure that I got it right.
+
+### Not including tables in v1
+
+I've thought for a bit that making the requirements for an implementation minimal would make it simpler to bring one to every platform of interest.
+But seeing as it is coming together into a fairly simple thing, the overhead of dealing with multiple versions would probably not be worth it.
+
+### Putting column names in metadata
+
+I mean, it _is_ metadata of a table.
+I'm still thinking.
+But CSV does more or less fine just letting one include the column names as the first row.
+Then again, CSV allows no type annotations, no comments on fields, and having reacher metadata is one of the goals here.

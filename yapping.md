@@ -107,8 +107,6 @@ After struggling for a bit, the way I see it that there's (at least) three parts
 
 So who exactly is promising backward and forward compatibility to whom? I'm confused.
 
-<!-- TODO -->
-
 ### Not including explicit escaping rules
 
 Did not strike me as obvious until I wrote tests, but not specifying how newlines inside cells should be escaped would lead to a lot of variability between implementations and be a pain to deal with down the line.
@@ -160,3 +158,10 @@ I mean, it _is_ metadata of a table.
 I'm still thinking.
 But CSV does more or less fine just letting one include the column names as the first row.
 Then again, CSV allows no type annotations, no comments on fields, and having reacher metadata is one of the goals here.
+
+### Using semver for anything
+
+Big time overthink.
+The header-body splitting is fairly trivial, and so is the header processing rule.
+Since the body processing rule can be influenced by the contents of the header, it should be possible to extend the format by adding new flags in the header.
+They'd be still constrained by the default processing rule, i.e. encoding-decoding a seqseq, but is it fairly general so we should be ok.

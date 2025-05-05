@@ -1,6 +1,6 @@
 # Newline-separated values
 
-STATUS: Draft, pre-1.0
+STATUS: Draft, pre-v1
 
 ## Why? (advantages)
 
@@ -37,7 +37,7 @@ Here, naming may be somewhat confusing, but no.
 Iterating on it a bit made me realise that I'd have to reimplement all the common tooling, and at that point, why would I bring with me all the design baggage of those formats?
 
 So first, NSV is not a "table" format.
-What is encoded is a "sequence of sequences".
+What is encoded is a "sequence of sequences" (I'll refer to them as *seqseq*s).
 *Exactly one* layer of nesting, and if all the nested ones happen to have same length — that's a table!
 (I'm fighting off the desire to call the nested ones "subsequences" but the word exists, so I shall suffer.)
 
@@ -53,13 +53,13 @@ See even more [yapping](./yapping.md).
 
 ## Specification
 
-Never wrote a rigorous one, so bear with me or better yet suggest improvements.
+If you find any part of this ambiguous, please do not hesitate to suggest improvements.
 
 An NSV file has two parts with distinct processing rules
 1. Header, containing metadata
 2. Body, containing the data itself
 
-The header is *not optional* and ends at first `\n---\n` encountered in file.
+The header is *not optional* and ends at the first `---` line (exact match) encountered in file.
 <!-- One may recognise this as being heavily reminiscent of Markdown frontmatter, except for lacking opening horizontal rule. -->
 <!-- Since we're starting fresh, there's no requirement to be able to parse data that may not contain the header, and we'd want at least the version to be there for future compatibility. -->
 
@@ -76,12 +76,16 @@ Lines that start with `//`, `#`, `(`, `[`, `{`, or `-- ` **do not and never will
 As such, you can use those to comment or keep any amount of metadata.
 Lines that start with `x-` will also be ignored as a consideration for extensions.
 
- Pattern             | Interpretation                | Since | Example   | Note     
----------------------|-------------------------------|-------|-----------|----------
- `v:<major>.<minor>` | Version number                | 1.0   | `v:1.0`   | Required 
- `table:<number>`    | Table with `<number>` columns | 1.1   | `table:4` |
+ Pattern     | Interpretation          | Example | Note                   
+-------------|-------------------------|---------|------------------------
+ `v<number>` | Version number          | `v1`    | Assume `v1` if omitted 
+ `table`     | Flag indicating a table | `table` |
 
-<!-- `table:<number>` indicates that the file is supposed to represent a table of `<number>` columns; if a row has a mismatched number of cells, it is to be considered invalid. -->
+`table` processing rule
+1. Infer the number of columns from the first row
+2. Discard rows that have any other number of cells; WARN by default
+
+<!-- `table:<number>` was supposed to indicate that the file is representing a table of `<number>` columns; if a row has a mismatched number of cells, it is to be considered invalid. -->
 
 ### Body
 
@@ -140,7 +144,7 @@ Everything is a string, and interpretation of those strings is up to the reader.
 #### An example
 
 ```nsv
-v:1.0
+v1
 # Yappy yappy yap
 ---
 first
@@ -178,16 +182,9 @@ Under consideration
 
 ### Version compatibility considerations
 
-The specification itself only uses MAJOR.MINOR format.
-The implementations are encouraged to match major and minor version of the highest specification version they support, leaving patch and other version sections up to them.
+At this point, there is assumed to be only one version `v1`, assumed by default
+Further extensions would be introduced by adding special flags in the metadata, so, hopefully, one would be enough
 
 For an implementation to "support" a given spec version, it must
-1. Support **all** required labels
-2. **If** it interprets any optional labels, it must match the semantics described in spec exactly
-3. Provide a way to view the full list of optional features, with indication of which ones are implemented (in whichever way is appropriate for the technology)
-
-Major version bumps are reserved for changes that would break existing implementation.
-A breakage means "the tool cannot interpret the file while omitting its optional labels".
-This would normally be reserved to changes in required label list or general parsing logic changes.
-
-Minor version bumps would then correspond to changes in optional features.
+1. **If** it interprets any optional labels, it must match the semantics described in spec exactly
+2. Provide a way to view the full list of optional features, with indication of which ones are implemented (in whichever way is appropriate for the technology)

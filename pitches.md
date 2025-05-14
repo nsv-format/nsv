@@ -28,3 +28,10 @@ What would that be?
 A database? You'd have to then give the maintainers some form or UI to do the updates and deal with versioning on your own. And with visibility of the snapshot.
 A CSV? With that you could indeed give people text to edit, they could even load that up in Excel and… but imagine the git diffs. Navigating one is not a pleasure either.
 A YAML? A YAML may indeed have fewer problems with diffs, though the structure is hierarchical by nature, and overall more verbose for a table.
+
+## For simple ADT encoding
+
+NSV's variable-length rows allow encoding sum types with positional constructor arguments.
+E.g. use the first element as discriminator, remaining elements as ordered constructor parameters.
+Though anything that can encode/decode to a sequence of strings would do.
+More compact than JSON's verbose field naming, cleaner than protocol buffers' `oneof` constructs.

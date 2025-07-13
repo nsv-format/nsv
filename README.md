@@ -37,15 +37,13 @@ Here, naming may be somewhat confusing, but no.
 Iterating on it a bit made me realise that I'd have to reimplement all the common tooling, and at that point, why would I bring with me all the design baggage of those formats?
 
 So first, NSV is not a "table" format.
-What is encoded is a "sequence of sequences" (I'll refer to them as *seqseq*s).
+What is being encoded is a "sequence of sequences" (I'll refer to them as *seqseq*s).
 *Exactly one* layer of nesting, and if all the nested ones happen to have same length — that's a table!
-(I'm fighting off the desire to call the nested ones "subsequences" but the word exists, so I shall suffer.)
+(I'm fighting off the desire to call the nested ones "subsequences" but the word exists, and so shall my suffering.)
 
-Second, I am not going to allow arbitrary text.
+Second, the handling of special characters (only the newline in this case) is different (no quoted bs).
 Making something-SV formats deal with raw text was a horrible decision, and people duly abused it as one would expect.
 This one shall not make that mistake.
-You wish to have arbitrary text?
-Sanitize your newlines as you will.
 
 Lastly, I intend to allow for somewhat richer metadata.
 
@@ -182,8 +180,8 @@ Under consideration
 
 ### Version compatibility considerations
 
-At this point, there is assumed to be only one version `v1`, assumed by default
-Further extensions would be introduced by adding special flags in the metadata, so, hopefully, one would be enough
+At this point, there is assumed to be only one version `v1`, assumed by default.
+Further extensions would be introduced by adding special flags in the metadata, so, hopefully, one would be enough.
 
 For an implementation to "support" a given spec version, it must
 1. **If** it interprets any optional labels, it must match the semantics described in spec exactly

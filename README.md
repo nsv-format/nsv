@@ -1,15 +1,15 @@
 # Newline-separated values
 
-STATUS: Draft, pre-v1
+STATUS: Draft
 
 ## Why? (advantages)
 
 - Better Git diffs
-- More flexibility for annotations
 - Simpler implementation
+- More flexibility for annotations
 - Better navigation in vim-like tools
 
-See more [pitches](./pitches.md).
+See more in [pitches](./pitches.md).
 
 ## Why? (history)
 
@@ -53,76 +53,26 @@ See even more [yapping](./yapping.md).
 
 If you find any part of this ambiguous, please do not hesitate to suggest improvements.
 
-An NSV file has two parts with distinct processing rules
-1. Header, containing metadata
-2. Body, containing the data itself
-
-The header is *not optional* and ends at the first `---` line (exact match) encountered in file.
-<!-- One may recognise this as being heavily reminiscent of Markdown frontmatter, except for lacking opening horizontal rule. -->
-<!-- Since we're starting fresh, there's no requirement to be able to parse data that may not contain the header, and we'd want at least the version to be there for future compatibility. -->
-
-### Header
-
-Each line in the header is interpreted as a literal string.
-Implementations MUST preserve the order of lines in the header when they write a previously read file.
-<!-- This weird one is a consideration for comments. -->
-
-Lines that match a known pattern MUST be interpreted according to its processing rule.
-<!-- Writers SHOULD attempt to place the version label before other known labels, so as to aid the parser. -->
-
-Lines that start with `//`, `#`, `(`, `[`, `{`, or `-- ` **do not and never will** have any special meaning under this specification.
-As such, you can use those to comment or keep any amount of metadata.
-Lines that start with `x-` will also be ignored as a consideration for extensions.
-
- Pattern     | Interpretation          | Example | Note                   
--------------|-------------------------|---------|------------------------
- `v<number>` | Version number          | `v1`    | Assume `v1` if omitted 
- `table`     | Flag indicating a table | `table` |
-
-`table` processing rule
-1. Infer the number of columns from the first row
-2. Discard rows that have any other number of cells; WARN by default
-
-<!-- `table:<number>` was supposed to indicate that the file is representing a table of `<number>` columns; if a row has a mismatched number of cells, it is to be considered invalid. -->
-
-### Body
-
 Individual nested sequences are called "rows" and individual elements in them are called "cells" even when they do not form a table.
 
- col1 | col2 
-------|------
- r1c1 | r1c2 
- r2c1 | r2c2 
-
-```csv
-r1c1,r1c2
-r2c1,r2c2
-```
-
-```nsv
-r1c1
-r1c2
-
-r2c1
-r2c2
-```
-
-The general parsing rule for the body ("simple rule" hereafter) is as following
+The general parsing rule for the entire file ("simple rule" hereafter) is as following
 1. Split on consecutive newlines to get rows
 2. Split each on single newline to get cells
 3. Escape special characters in each cell
 
-#### 1. Split on consecutive newlines to get rows
+Trivially, the encoding rule is exactly that but in reverse order, with operations replaced with their inverse.
+
+### 1. Split on consecutive newlines to get rows
 
 A newline immediately following another newline always indicates that a row was completed, even if said row was empty.
 Two newlines would mean that a row has ended, three that an empty row followed after that.
 A table would not contain zero-cell rows, so the rule would degenerate into splitting on double newlines.
 
-#### 2. Split each on single newline to get cells
+### 2. Split each on single newline to get cells
 
 Nothing to add.
 
-#### 3. Escape special characters in each cell
+### 3. Escape special characters in each cell
 
 Fields that contain no value, and would normally be represented as an empty string, must be explicitly represented with a single backslash.
 Literal `\`s MUST be replaced with literal `\\`.
@@ -133,18 +83,35 @@ Newlines MUST be replaced with literal `\n`.
 Writers MAY escape additional special characters, as long as it does not interfere with `\n` and `\\`.
 Readers SHOULD ignore escape sequences they do not recognise, passing them through with the literal backslash.
 
-#### Data types
+## Examples
 
-The format itself is data type-agnostic.
-Everything is a string, and interpretation of those strings is up to the reader.
-<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
+### A trivial example
 
-#### An example
+ col1 | col2 
+:----:|:----:
+  a   |  b   
+  c   |  c   
+
+```csv
+col1,col2
+a,b
+c,d
+```
 
 ```nsv
-v1
-# Yappy yappy yap
----
+col1
+col2
+
+a
+b
+
+c
+d
+```
+
+### A less trivial example
+
+```nsv
 first
 row
 
@@ -160,7 +127,7 @@ Tab\tseparated\tvalues\n(would be left as-is normally)
 Not a newline: \\n
 ```
 
-This would roughly correspond to the following Markdown table (NSV is not a table though)
+This would roughly correspond to the following Markdown table (NSV is not a table though, and Markdown doesn't support tables without column names)
 
  0                                                                              | 1                                                        | 2                 
 --------------------------------------------------------------------------------|----------------------------------------------------------|-------------------
@@ -169,20 +136,29 @@ This would roughly correspond to the following Markdown table (NSV is not a tabl
  missing ->                                                                     |                                                          | <- missing        
  Roses are red<br>Violets are blue<br>This may be pain<br>But CSV would be, too | Tab\tseparated\tvalues<br>(would be left as-is normally) | Not a newline: \n 
 
-### Possible future extensions
+## Extras
 
-Likely
+### On data types
+
+The format itself is data type-agnostic.
+Everything is a string, and interpretation of those strings is up to the reader.
+<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on what strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
+
+### On metadata
+
+The core NSV format does not have processing rules for metadata.
+I am currently cooking up an extended version that does, under the constraint of it not interfering with the processing rule described above.
+That is, the processing rule can be used without looking out for changes to it, ever.
+If they were to happen, it'll be a different format with a different name and different set of libraries.
+
+Here are some of the things that would likely be in the extended format
 - naming columns in metadata
 - specifying column types in metadata
-
-Under consideration
 - comment support in the data paragraphs themselves
 
-### Version compatibility considerations
+### On parsers, version compatibility
 
-At this point, there is assumed to be only one version `v1`, assumed by default.
-Further extensions would be introduced by adding special flags in the metadata, so, hopefully, one would be enough.
-
-For an implementation to "support" a given spec version, it must
-1. **If** it interprets any optional labels, it must match the semantics described in spec exactly
-2. Provide a way to view the full list of optional features, with indication of which ones are implemented (in whichever way is appropriate for the technology)
+The rule for encoding/decoding shall remain without changes, so there is no versioning whatsoever. <!-- Aka YOLO versioning -->
+Implementation-wise, one of the primary goals of this design is to make it sufficiently simple to handle these files without a library in cases where performance is not critical.
+I intend to provide a number of reference implementations across languages, which could be vendored since one shouldn't really worry about the logic going out of date.
+Performance-conscious implementations would of course have to evolve together with underlying tooling, use what matches your case.

@@ -165,3 +165,21 @@ Big time overthink.
 The header-body splitting is fairly trivial, and so is the header processing rule.
 Since the body processing rule can be influenced by the contents of the header, it should be possible to extend the format by adding new flags in the header.
 They'd be still constrained by the default processing rule, i.e. encoding-decoding a seqseq, but is it fairly general so we should be ok.
+
+### Having header-body split
+
+The original design was largely inspired by how I was already processing my Markdown files for years.
+After switching to the format as it was described in this spec and using it for some time, I realised that the choice of the header-body separator, as well as the idea of having one at all, was quite arbitrary on my part.
+I often found myself dealing solely with the body of the thing, having to chop and prepend the header for no good reason.
+Even exposing "headless" versions of encode/decode methods were just adding mental overhead not justifiable by what was being abstracted.
+
+It is only at this point that I've realised that instead of having header and body with different processing rules, I could just use the same one, and then have metadata handling, if any, done based on data from the first 1-2 elements in the decoded outer sequence.
+That would more closely resemble how header is usually dealt with in CSV (it literally isn't, with libraries doing ad hoc guesswork).
+But adding these optional rules on top is bound to be much simpler if it happens once the file is partially interpreted.
+
+### Having extensible/evolving format
+
+I think by now I'm largely over the idea of having any extensibility in this format.
+While there are many ways in which metadata could be encoded in all this, it seems much more valuable to have a reliable core format.
+So rather than have v1 or whatever, once I feel this is polished enough, I'd just finalise it and focus on the remaining libraries/tools.
+Then, since there are promising ways to bring metadata into all this, I'd just draft an Extended NSV format or something that just builds on top.

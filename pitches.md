@@ -1,12 +1,12 @@
 # Sales Pitches
 
-Difference arguments would appeal to different audiences, so in no particular order.
+Different arguments would appeal to different audiences, so in no particular order.
 
 ## For Vim and Vim-like tool users
 
 The row separation with `\n\n` matches exactly Vi's notion of a "paragraph".
 As such, you can move down `<n>` rows with `<n>}`, delete a row with `dap`, move to n-th cell with `<n>j`, etc.
-CSV, JSON, and the rest would generally require you additional setup to navigate.
+CSV, JSON, and the rest would generally require additional setup to navigate.
 
 ## For tool developers
 
@@ -16,9 +16,8 @@ The format is sufficiently simple to be processable with decent performance even
 ## For Obsidian and similar tool users
 
 This one may be somewhat unexpected, but consider this.
-The separator matches Markdown's horizontal rule.
+If you define a matching rule and ignore paragraphs/rows that do not match it, you could use any and all tooling that works with NSVs to embed data directly in your notes at minimal overhead.
 If you use the frontmatter, you'd have to handle it yourself first, but the rest of a file can be seen as valid NSV in most cases.
-If you define a matching rule and ignore paragraphs that do not match it, you could use any and all tooling that works with headless NSVs to embed data directly in your notes at minimal overhead.
 
 ## For people who have to work with non-tech people
 

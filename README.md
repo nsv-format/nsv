@@ -58,30 +58,43 @@ Individual nested sequences are called "rows" and individual elements in them ar
 The general parsing rule for the entire file ("simple rule" hereafter) is as following
 1. Split on consecutive newlines to get rows
 2. Split each on single newline to get cells
-3. Escape special characters in each cell
+3. Unescape special characters in each cell
+
+### Encoding
 
 Trivially, the encoding rule is exactly that but in reverse order, with operations replaced with their inverse.
 
-### 1. Split on consecutive newlines to get rows
+#### Escaping characters in individual cells
+
+Literal `\`s MUST be replaced with literal `\\`.
+Newlines MUST be replaced with literal `\n`.
+Fields that contain no value, and would normally be represented as an empty string, must be explicitly represented with a single backslash.
+<!-- `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding. -->
+<!-- As to why the token is needed in the first place: we need it to make parsing unambiguous (new row vs empty field) while retaining seqseq representability. -->
+
+#### Combining escaped cells into a seqseq
+
+A single newline is added at the end of each cell to indicate its termination.
+A single newline is then added at the end of each row to indicate its termination.
+
+### Decoding
+
+#### Recovering the structure
 
 A newline immediately following another newline always indicates that a row was completed, even if said row was empty.
 Two newlines would mean that a row has ended, three that an empty row followed after that.
 A table would not contain zero-cell rows, so the rule would degenerate into splitting on double newlines.
 
-### 2. Split each on single newline to get cells
+#### Unescaping characters in individual cells
 
-Nothing to add.
+Interpret a single `\` as the empty string.
+Going left-to-right, interpret `\\` as a single `\` and `\n` as the newline symbol.
 
-### 3. Escape special characters in each cell
+##### Handling invalid cells
 
-Fields that contain no value, and would normally be represented as an empty string, must be explicitly represented with a single backslash.
-Literal `\`s MUST be replaced with literal `\\`.
-Newlines MUST be replaced with literal `\n`.
-<!-- `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding. -->
-<!-- As to why the token is needed in the first place: we need it to make parsing unambiguous while retaining the simplicity of implementation. -->
-
-Writers MAY escape additional special characters, as long as it does not interfere with `\n` and `\\`.
 Readers SHOULD ignore escape sequences they do not recognise, passing them through with the literal backslash.
+A dangling backslash at the end of a line SHOULD be stripped.
+<!-- Between passing the dangling backslash through and stripping it, the latter is chosen because it makes the empty cell token a special case of this rule. -->
 
 ## Examples
 

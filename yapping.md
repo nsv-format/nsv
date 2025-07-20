@@ -183,3 +183,19 @@ I think by now I'm largely over the idea of having any extensibility in this for
 While there are many ways in which metadata could be encoded in all this, it seems much more valuable to have a reliable core format.
 So rather than have v1 or whatever, once I feel this is polished enough, I'd just finalise it and focus on the remaining libraries/tools.
 Then, since there are promising ways to bring metadata into all this, I'd just draft an Extended NSV format or something that just builds on top.
+
+### Not handling dangling backslashes properly
+
+I did not realise initially that passing-through of unrecognised backslash sequences and analogous treatment of the dangling backslash are fairly different cases.
+While both would only appear in invalidly encoded files, the latter would include what I am using as the empty string token.
+As far as backslash-escaped strings go, the handling approaches of the dangling one seem to be one of
+- refusing to process the string entirely
+- stripping it
+- interpreting it as line continuation
+
+I did not encounter cases where it would be passed through literally, mostly because it'd escape the closing quote and be irrepresentable as such.
+
+Since these are rules for files that were not encoded properly, there's a certain degree of freedom in how we'd be handling them.
+Refusing to process the entire file or an entire row because of a malformed cell would be too painful for the user.
+Stripping the backslash and issuing a warning seems to be a sane middle ground.
+The line continuation option looks interesting, but it would interfere with handling of the structure itself, both complicating the rule and making it harder to assess the seqseq characteristics with simple tools.

@@ -20,12 +20,12 @@ And it sucked.
 Binary formats and databases are not editable without special tooling. Versioning, where supported, is also not trivial.  
 Text formats, well, they all kinda suck?  
 JSON, even if JSON5, is bloat, with extra pain points if you're encoding a table.  
-CSV fails at both ends of making versioning visible: not only a change in one field results in diff for the entire line, it also *doesn't* for arbitrary text data in fields (where quotation is involved).  
+CSV fails at both ends of making versioning visible: not only a change in one cell results in diff for the entire line, it also *doesn't* for arbitrary text data in cells (where quotation is involved).  
 YAML is, well, YAML, just ask a Norwegian.
 
 Enter NSV.  
-As naming should suggest, the main idea is to do what a CSV does, but separate fields with a newline.  
-Rows are then separated with a pair of newlines (at this point we have to introduce the empty field token).  
+As naming should suggest, the main idea is to do what a CSV does, but separate cells with a newline.  
+Rows are then separated with a pair of newlines (at this point we have to introduce the empty cell token).  
 I thought of it as a funny idea that probably had lots of issues, otherwise why wouldn't it be around.  
 But Claude said he knows no encoding format similar to what I was describing, and that brings us here.  
 The more we iterated on it, the more it made sense, and the less made its absence.  
@@ -67,9 +67,9 @@ Trivially, the encoding rule is exactly that but in reverse order, with operatio
 
 Literal `\`s MUST be replaced with literal `\\`.  
 Newlines MUST be replaced with literal `\n`.  
-Fields that contain no value, and would normally be represented as an empty string, MUST be explicitly represented with a single `\`.  
+Cells that contain no value, and would normally be represented as an empty string, MUST be explicitly represented with a single `\`.  
 <!-- `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding. -->
-<!-- As to why the token is needed in the first place: we need it to make parsing unambiguous (new row vs empty field) while retaining seqseq representability. -->
+<!-- As to why the token is needed in the first place: we need it to make parsing unambiguous (new row vs empty cell) while retaining seqseq representability. -->
 
 #### Combining escaped cells into a seqseq
 
@@ -168,7 +168,7 @@ If you have ideas on how to make any of these more ergonomic or feel like trying
 
 The format itself is data type-agnostic.  
 Everything is a string, and interpretation of those strings is up to the reader.  
-<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on which strings mean what is not up to this spec with a sole exception: the empty field token, `\`. -->
+<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on which strings mean what is not up to this spec with a sole exception: the empty cell token, `\`. -->
 
 ### On metadata
 

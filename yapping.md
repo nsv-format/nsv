@@ -23,13 +23,13 @@ In principle, allowing metadata being passed separately, letting a parser deal w
 Gladly, wasn't much of a detour: CSV's approach to escaping multiline and commas was likely driven by existing baggage which a new format would not share.  
 With newline being the only special symbol to consider in the body, one would only have to somehow deal with multiline strings being encoded, no escaping commas then escaping the quotes used to escape commas then… bruh.
 
-### Not using an empty field token
+### Not using an empty cell token
 
 Since I started off trying to replace CSVs, the original intention was to only handle table data, i.e. sequences where you'd know the number of elements in each to be equal.  
 At that point, having simpler parsing and better Git diffs were the only goals.
 
-It quickly dawned on me that the readability of such format would be abysmal, just imaging eyeing row separation vs multiple empty fields, which are oh so common in real-life tables.  
-It would also make absolutely necessary specification of number of fields in the header, as there would be no way to tell that from the data itself.
+It quickly dawned on me that the readability of such format would be abysmal, just imaging eyeing row separation vs multiple empty cells, which are oh so common in real-life tables.  
+It would also make absolutely necessary specification of number of cells in the header, as there would be no way to tell that from the data itself.
 
 The `\` as empty cell token was the first and only one I have considered.  
 It immediately made sense since it's "unoccupied" in the most common escaping style, easy to type, and is visually lightweight.  
@@ -40,10 +40,10 @@ And looks like line continuation in many languages. And has a tad of "nothing" v
 Now, this is a funny one, and I did not give up on it, it just clearly has no place in a `1.0`.  
 In principle, if any cell occupies its own line, one could end said line with a comment, allowing the data file itself have annotations on cell level.  
 Why on Earth would you want that?  
-Remember that the originally pain point was dealing with lookup tables. In a relational database setup, it's not uncommon for them to be normalised.  
+Remember that the original pain point was dealing with lookup tables. In a relational database setup, it's not uncommon for them to be normalised.  
 Now, while the whole point (well, a good portion) of normalisation is not having the same thing in multiple places, it would aid the readability greatly, if instead of just an ID of a, say, product category that is described in a neighbouring table was available right there in the data file itself.  
 You could even automate annotations like that!  
-It would of course be very troubling while the format is completely data type-agnostic, but once you have tables and can specify field types in the header and can specify a comment token in the header, you would be able to have painless commenting on at least numeric fields, ISO timestamps, UUIDs, alphanumeric identifiers, and anything else that is truly arbitrary.  
+It would of course be very troubling while the format is completely data type-agnostic, but once you have tables and can specify column types in the header and can specify a comment token in the header, you would be able to have painless commenting on at least numeric cells, ISO timestamps, UUIDs, alphanumeric identifiers, and anything else that is truly arbitrary.  
 
 <!-- Funny how the paragraphs are getting longer and longer. -->
 
@@ -60,7 +60,7 @@ It is at about this point that I gave up on the idea of allowing per-cell commen
 
 ### Focusing on tables
 
-And about here I have realised that now with the empty field token I could relax the requirement of having equal row lengths.
+And about here I have realised that now with the empty cell token I could relax the requirement of having equal row lengths.
 
 This, in turn, introduced a new not-so-funny edge case that drove some of the decisions down the line: empty rows.  
 It would be horrible to not be able to encode an empty sequence or require a special token to do so, and using just `\` would not work since that's a single empty element sequence (think `[]` vs `[""]`).  
@@ -79,7 +79,7 @@ What matters is that by the time we reach the end of the header we know all we n
 If the order of meaningful keys/labels is not important, we can safely preserve all the original header lines in the exact order they were provided.
 
 At the same time, providing guarantees that nothing prefixed with common symbols used for comments or typical data encodings would mean that the end-users of the data files could in principle keep any amount of description together with the data itself.  
-This could, though not part of the original intention, be useful if the lookups are fed to an LLM (though they would probably fare better with a format which specifies field name for each cell).
+This could, though not part of the original intention, be useful if the lookups are fed to an LLM (though they would probably fare better with a format which specifies a name for each cell).
 
 At first, I've though of having metadata really laconic, like `v1,table` or `v1,table:2,columns:[col1,col2]`.  
 But why commas? And what's the deal with the brackets?  
@@ -157,7 +157,7 @@ But seeing as it is coming together into a fairly simple thing, the overhead of 
 I mean, it _is_ metadata of a table.  
 I'm still thinking.  
 But CSV does more or less fine just letting one include the column names as the first row.  
-Then again, CSV allows no type annotations, no comments on fields, and having reacher metadata is one of the goals here.
+Then again, CSV allows no type annotations, no comments on cells, and having reacher metadata is one of the goals here.
 
 ### Using semver for anything
 
@@ -198,7 +198,7 @@ I did not encounter cases where it would be passed through literally, mostly bec
 Since these are rules for files that were not encoded properly, there's a certain degree of freedom in how we'd be handling them.  
 Refusing to process the entire file or an entire row because of a malformed cell would be too painful for the user.  
 Stripping the backslash and issuing a warning seems to be a sane middle ground.  
-The empty field token then ends up being a special case only on the unhappy path.  
+The empty cell token then ends up being a special case only on the unhappy path.  
 The line continuation option looks interesting, but it would interfere with handling of the structure itself, both complicating the rule and making it harder to assess the seqseq characteristics with simple tools.  
 
 ### Not being explicit about what constitutes a newline

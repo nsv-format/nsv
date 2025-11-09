@@ -198,6 +198,7 @@ I did not encounter cases where it would be passed through literally, mostly bec
 Since these are rules for files that were not encoded properly, there's a certain degree of freedom in how we'd be handling them.  
 Refusing to process the entire file or an entire row because of a malformed cell would be too painful for the user.  
 Stripping the backslash and issuing a warning seems to be a sane middle ground.  
+The empty field token then ends up being a special case only on the unhappy path.  
 The line continuation option looks interesting, but it would interfere with handling of the structure itself, both complicating the rule and making it harder to assess the seqseq characteristics with simple tools.  
 
 ### Not being explicit about what constitutes a newline

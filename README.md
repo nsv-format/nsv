@@ -52,6 +52,7 @@ See even more [yapping](./yapping.md).
 If you find any part of this ambiguous, please do not hesitate to suggest improvements.
 
 Individual nested sequences are called "rows" and individual elements in them are called "cells" even when they do not form a table.
+Newline specifically refers to LF. CR is not recognised as a special character in any scenario.
 
 The general parsing rule for the entire file ("simple rule" hereafter) is as following
 1. Split on consecutive newlines to get rows

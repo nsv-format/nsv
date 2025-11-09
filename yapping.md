@@ -200,3 +200,8 @@ Refusing to process the entire file or an entire row because of a malformed cell
 Stripping the backslash and issuing a warning seems to be a sane middle ground.  
 The line continuation option looks interesting, but it would interfere with handling of the structure itself, both complicating the rule and making it harder to assess the seqseq characteristics with simple tools.  
 
+### Not being explicit about what constitutes a newline
+
+I've largely neglected specifying that `\n` is intended as the sole "newline character" throughout the specification.  
+But this kept coming up in feedback, and, in retrospect, I should've been explicit about my disregard towards the `\r` from the very beginning.
+

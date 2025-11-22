@@ -206,3 +206,13 @@ The line continuation option looks interesting, but it would interfere with hand
 I've largely neglected specifying that `\n` is intended as the sole "newline character" throughout the specification.  
 But this kept coming up in feedback, and, in retrospect, I should've been explicit about my disregard towards the `\r` from the very beginning.
 
+### Not addressing incomplete rows at the end of a file
+
+Another unhappy path topic, similar to the dangling backslashes.  
+Strictly speaking, since a correct writer would always produce files ending in `\n\n`, handling those here should not be my concern.  
+But since one of the primary value propositions is human editability without specialised tooling, in effect, it very much is.
+
+This originally came up during reconciliation between resumable and non-resumable consumption logic.  
+The former necessitates keeping incomplete rows, while the latter leaves more leeway in this unhappy path.  
+Since many editors would strip or add newlines automatically and in differing ways, I decided that non-resumable consumption should have mercy and consider the remainder complete even if it fails to properly terminate last cell/row, with an optional warning.
+

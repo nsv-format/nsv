@@ -4,7 +4,7 @@ Different arguments would appeal to different audiences, so in no particular ord
 
 ## For Vim and Vim-like tool users
 
-For a table, the row separation with `\n\n` matches quite neatly Vi's notion of a "paragraph".  
+For a table, the row termination with an empty line matches quite neatly Vi's notion of a "paragraph".  
 As such, you can move down `<n>` rows with `<n>}`, delete a row with `dap`, move to n-th cell with `<n>j`, etc.  
 CSV, JSON, and the rest would generally require additional setup to navigate.
 

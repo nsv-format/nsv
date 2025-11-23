@@ -25,7 +25,7 @@ YAML is, well, YAML, just ask a Norwegian.
 
 Enter NSV.  
 As naming should suggest, the main idea is to do what a CSV does, but separate cells with a newline.  
-Rows are then separated with a pair of newlines (at this point we have to introduce the empty cell token).  
+Rows are then separated with an additional newline (at this point we have to introduce the empty cell token).  
 I thought of it as a funny idea that probably had lots of issues, otherwise why wouldn't it be around.  
 But Claude said he knows no encoding format similar to what I was describing, and that brings us here.  
 The more we iterated on it, the more it made sense, and the less made its absence.  
@@ -34,7 +34,7 @@ So here I am, bringing yet another encoding format into the accursed development
 ## Is this to CSV what CSV is to TSV?
 
 Here, naming may be somewhat confusing, but no.  
-Iterating on it a bit made me realise that I'd have to reimplement all the common tooling, and at that point, why would I bring with me all the design baggage of those formats?
+Iterating on it a bit made me realise that I'd have to reimplement all of the common tooling, and at that point, why would I bring with me all of the design baggage of those formats?
 
 So first, NSV is not a "table" format.  
 What is being encoded is a "sequence of sequences" (I'll refer to them as *seqseq*s).  
@@ -42,32 +42,47 @@ What is being encoded is a "sequence of sequences" (I'll refer to them as *seqse
 (I'm fending off the desire to call the nested ones "subsequences" but the word exists, and so shall my suffering.)
 
 Second, the handling of special characters (only the newline in this case) is different (no quoted bs).  
-Making something-SV formats deal with raw text was a horrible decision, and people duly abused it as one would expect.  
+Making something-SV table formats deal with arbitrary text data was a horrible decision, and people duly abused it as one would expect.  
 This one shall not make that mistake.
 
 See even more [yapping](./yapping.md).
 
 ## Specification
 
-If you find any part of this ambiguous, please do not hesitate to suggest improvements.
+Terms
+- 'row' is an individual nested sequence
+- 'cell' is an individual element of a 'row'
+- 'line' is a sequence of characters between newlines
+  - 'row lines' are the sequence of lines matching a row
+- 'table' is a seqseq such that the length of all of its 'rows' is the same
+  - 'row' and 'cell' are terms used even when the seqseq is not a 'table'
+- 'newline' is the LF character
+  - CR is not recognised as a special character in any scenario
 
-Individual nested sequences are called "rows" and individual elements in them are called "cells" even when they do not form a table.
-Newline specifically refers to LF. CR is not recognised as a special character in any scenario.
+NSV encodes a seqseq.  
+A seqseq is a sequence of rows.  
+A row is a sequence of cells (not lines!).  
+A table is but a special case of seqseq and has no parsing rules beyond those of the general case.
 
-The general parsing rule for the entire file ("simple rule" hereafter) is as following
-1. Split on consecutive newlines to get rows
-2. Split each on single newline to get cells
-3. Unescape special characters in each cell
+Newlines are 'line' boundaries.  
+Empty 'lines' are 'row lines' boundaries.  
+Non-empty 'lines' are escaped 'cell' content.
+
+The general parsing rule ("simple rule" hereafter) is as following
+1. Accumulate characters into a buffer until newline
+2. If the buffer is empty: complete the current row
+3. If the buffer is non-empty: unescape buffer, add to current row as cell
+4. Clear the buffer and continue
 
 ### Encoding
 
 Trivially, the encoding rule is exactly that but in reverse order, with operations replaced with their inverse.
 
-#### Escaping characters in individual cells
+#### Escaping characters in a cell
 
 Literal `\`s MUST be replaced with literal `\\`.  
 Newlines MUST be replaced with literal `\n`.  
-Cells that contain no value, and would normally be represented as an empty string, MUST be explicitly represented with a single `\`.  
+Empty cells MUST be explicitly represented with a single `\`.  
 <!-- `\` would then correspond to an invalid string that would never be encoded by backslash-escaped encoding. -->
 <!-- As to why the token is needed in the first place: we need it to make parsing unambiguous (new row vs empty cell) while retaining seqseq representability. -->
 
@@ -82,18 +97,30 @@ A single newline is then added at the end of each row to indicate its terminatio
 
 A newline immediately following another newline always indicates that a row was completed, even if said row was empty.  
 Two newlines would mean that a row has ended, three that an empty row followed after that.  
-A table would not contain zero-cell rows, so (1) of the simple rule would degenerate into splitting on double newlines.
 
 #### Unescaping characters in individual cells
 
 Interpret a single `\` as the empty string.  
-Going left-to-right, interpret `\\` as a single `\` and `\n` as the newline symbol.
+Going left-to-right, interpret `\\` as a single `\` and `\n` as the newline.
+
+#### Handling rejected strings
+
+The following MAY/SHOULD rules are for strings that could not have been produced by a valid NSV writer.  
+It is up to the user-facing tool to decide whether to coerce, warn, or error upon encountering an invalid string.  
+Below are the coercion rules for all classes of rejected strings.
 
 ##### Handling invalid cells
 
 Readers SHOULD ignore escape sequences they do not recognise, passing them through with the literal backslash.  
 A dangling backslash at the end of a line SHOULD be stripped.  
 <!-- Between passing the dangling backslash through and stripping it, the latter is chosen because it makes the empty cell token a special case of this rule. -->
+
+##### Handling abrupt EOF
+
+A valid NSV would always end in two newlines.  
+Readers MAY emit the incomplete cell/row.
+<!-- Can't really prohibit this since human-edited files would often have this issue. -->
+<!-- Can't really accept it as valid since it would get in the way of streaming/tailing. -->
 
 ## Examples
 
@@ -152,14 +179,12 @@ This would roughly correspond to the following Markdown table (NSV is not a tabl
 
 Repository | Language | Notes
 --- | --- | ---
-https://github.com/nsv-format/nsv-python | Python | Available on PyPI<br>Can hook itself to Pandas
-https://github.com/nsv-format/nsv-scala | Scala | Not published, the algo is calque from Python version
-https://github.com/nsv-format/nsv-rust | Rust | Available on crates.io<br>The algo is calque from Python version
-https://github.com/nsv-format/nsv-js | JS | Placeholder
+https://github.com/nsv-format/nsv-python | Python | Available on PyPI<br>Can patch itself onto Pandas
+https://github.com/nsv-format/nsv-scala | Scala | Not published, string-only, the algo is calque from Python version
+https://github.com/nsv-format/nsv-rust | Rust | Available on crates.io<br>Reasonably fast
+https://github.com/nsv-format/nsv-js | JS | Available on NPM<br>Supports streaming
 
-The implementations above are provided for clarity on semantics and basic use.  
-All use the most direct sequential algorithm there is, as demonstrating performance advantages is not a part of their scope at this time.  
-If you have ideas on how to make any of these more ergonomic or feel like trying your hand on implementing a brutally optimised version, I very much welcome that.
+If you have ideas on how to make any of these more ergonomic or feel like implementing a brutally optimised version, I very much welcome that.
 <!-- Of mine, I mostly used the Python and the Scala versions. I did use NSV with JavaScript, but parsers were ad hoc in projects' code. -->
 
 ## Extras
@@ -168,19 +193,14 @@ If you have ideas on how to make any of these more ergonomic or feel like trying
 
 The format itself is data type-agnostic.  
 Everything is a string, and interpretation of those strings is up to the reader.  
-<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on which strings mean what is not up to this spec with a sole exception: the empty cell token, `\`. -->
+<!-- For practical applications, parsers would normally tightly integrate with converters, but deciding on which strings mean what is not up to this spec. -->
 
 ### On metadata
 
 The core NSV format does not have processing rules for metadata.  
-I am currently cooking up an extended version that does, under the constraint of it not interfering with the processing rule described above.  
+I am currently cooking up an [extended version](./ensv.md) that does, under the constraint of it not interfering with the processing rule described above.  
 That is, the processing rule here can be used without looking out for changes to it, ever.  
 If they were to happen, it'd be a different format with a different name and different set of libraries.
-
-Here are some of the things that would likely be in the extended format
-- naming columns in metadata
-- specifying column types in metadata
-- support of comments directly in the cells
 
 ### On parsers, version compatibility
 

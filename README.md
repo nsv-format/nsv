@@ -209,3 +209,19 @@ Implementation-wise, one of the primary goals of this design is to make it suffi
 I intend to provide a number of reference implementations across languages, which could be vendored since one shouldn't really worry about the logic going out of date.  
 Performance-conscious implementations would of course have to evolve together with underlying tooling, use what matches your case.
 
+### Specification, implementation, tool
+
+The mental model I have for this is that these are the three distinct layers with distinct responsibilities.  
+This repo, the specification, defines how to encode and recover the 2D structure. A simple task, a simple spec.  
+An implementation, which may well be called a parser, stays true to the spec and has no responsibilities beyond that.  
+A tool, then, is whatever is interfacing with the end user, be it a standalone CLI tool, an extension or plugin for some other tool, or a public method of the package holding the parser.
+
+While the line between the parser and the tool may be blurred in code, the layered model itself is meant to address some of the spots not addressed by the specification itself.  
+For one, dealing with real-world issues like files corrupted with CRs or BOM is in no way a responsibility of the specification. I understand that for performance reasons some tools may choose to embed the handling directly into the parser, but the burden of reconciling that with the format's layout should lie with such tools, and not the specification itself.  
+Another case would be providing good ergonomics. Resumable (e.g. streaming, tailing) and non-resumable (e.g. file, in-memory string) consumption would require different handling of edge cases to provide good user experience. For example, in non-resumable case the EOF guarantees the end of data was reached, enabling more forgiving treatment of missing newlines at the end.
+
+### On encoding
+
+Since LF, `\`, and `n` are the only anyhow special bytes in the format, any encoding using the same bytes to represent these as ASCII, and does not use these bytes anywhere else, would work with NSV.  
+This includes UTF-8, of course, but is very much not limited to it.
+

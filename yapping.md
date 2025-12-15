@@ -216,3 +216,17 @@ This originally came up during reconciliation between resumable and non-resumabl
 The former necessitates keeping incomplete rows, while the latter leaves more leeway in this unhappy path.  
 Since many editors would strip or add newlines automatically and in differing ways, I decided that non-resumable consumption should have mercy and consider the remainder complete even if it fails to properly terminate last cell/row, with an optional warning.
 
+### Minimal escaping
+
+Opus 4.5 suggested I should only escape backslashes followed by `n`, `\`, or LF since otherwise I would be "paying rent for space I promised to never occupy".  
+Other Claudes eventually convinced him otherwise and below is his haiku reflecting on the outcome.
+```
+Lenient decode
+begged for a smarter encode—
+but boring still won.
+```
+
+Jokes aside, it was tempting proposition since it would make files more lean, repeated escaping less explosive, and parsing potentially more performant.  
+But that complicated the rule (have to think if you have to escape a backslash).  
+It was also a good point to note that the concerns were mostly related to issues outside of NSV's design scope, and ones entirely manageable by extension formats.
+

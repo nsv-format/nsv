@@ -18,6 +18,8 @@ They have reached a point where there's a certain level of consistent vision, an
 The story begins with defining an NSV-aware operation on a seqseq.  
 Terms are used according to their definition in the core spec.
 
+NOTE: The `lift` section is now outdated, to be reformulated via `spill`, as defined in [properties](./properties.md).
+
 #### Lift/unlift
 
 Lift is an operation on a 'seqseq' that produces 'row lines' containing flattened data.  
@@ -86,6 +88,9 @@ Row forms
 - a form to provide column name-type pairs (vertical)
 - a form to define rules for packing/unpacking multiple fields in one cells
   - useful e.g. for log layouts where wasting a line for each field is a damn waste
+
+As for distinguishing between cell and row forms, since they're all defined a priori, there can be no ambiguity.  
+For readability, a convention like "all row form named should end on `:`" would suffice.
 
 ---
 

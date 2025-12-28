@@ -117,7 +117,7 @@ A dangling backslash at the end of a line SHOULD be stripped.
 
 ##### Handling abrupt EOF
 
-A valid NSV would always end in two newlines.  
+Any seqseq but [] and [[]] would end in two newlines once encoded.  
 Readers MAY emit the incomplete cell/row.
 <!-- Can't really prohibit this since human-edited files would often have this issue. -->
 <!-- Can't really accept it as valid since it would get in the way of streaming/tailing. -->

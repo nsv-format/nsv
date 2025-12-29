@@ -13,23 +13,22 @@ Concrete
 
 Abstract
 - `Seq[A]` — sequence of elements of type `A`
-- `E[Seq[A], t]` —  escaped `Seq[A]`, i.e. one where `t ∈ A` is no longer an element
+- `E[A, t]` — type `A`, excluding element `t ∈ A`, think `A \ {t}`
 
-Set of possible `E[Seq[A], t]`s is obviously a proper subset of the set of possible `Seq[A]`s.  
-Note that "escaping" here does not refer to any particular escaping approach, what matters is that the resulting sequence no longer contains `t`.
+Set of possible `Seq[E[A, t]]`s is obviously a proper subset of the set of possible `Seq[A]`s.  
+Note that "exclusion" here does not refer to use of any particular escaping approach, what matters is that the resulting sequences no longer contain `t`.
 
 ### Operations
 
-`spill[A, t]: Seq[E[Seq[A], t]] → Seq[A]`  
+`spill[A, t]: Seq[Seq[E[A, t]]] → Seq[A]`  
 The operation itself is simple: we "spill" structure into the flattened sequence, adding `t` every time a nested sequence ends.
 
-`unspill[A, t]: Seq[A] → Seq[E[Seq[A], t]]`  
-Inverse of `spill`. Picks up termination tokens from the sequence and uses them to recover the original structure.
+`unspill[A, t]: Seq[A] → Seq[Seq[E[A, t]]]`  
+Inverse of `spill`. Picks up the termination tokens from the sequence and uses them to recover the original structure.
 
-`escape: Seq[Seq[String]] → E[Seq[E[Seq[String], '\n']], '']`  
+`escape: String → E[Seq[E[Char, '\n']], '']`
 This `escape` is a very concrete operation, it is exactly the escaping rule as defined in the NSV spec.  
-While naturally it is a `String → String` mapping, the important point here is that it maps into a set of non-empty strings that cannot contain newline characters.  
-Representing this refinement at `String` level would be a tad difficult, and would mislead as to the role of `escape` in the encoding.
+Maps into a set of non-empty strings that cannot contain newline characters.  
 
 `unescape`  
 Inverse of `escape`.
@@ -43,12 +42,12 @@ The inverse of `encode`.
 ### Decomposition
 
 With definitions as above, `encode` is exactly  
-`encode = spill[Char, '\n'] ∘ spill[String, ''] ∘ escape`
+`encode = spill[Char, '\n'] ∘ spill[String, ''] ∘ map(map(escape))`
 
 `escape` is defined in a way that takes care of both layer's termination tokens in one go.  
 Trivially, it was possible to use the same token for both levels, and repeat a simpler escaping schema, but I do not believe a readable variant exists among such encodings.
 
-`decode = unescape ∘ unspill[String, ''] ∘ unspill[Char, '\n']`
+`decode = map(map(unescape)) ∘ unspill[String, ''] ∘ unspill[Char, '\n']`
 
 ### Repeated application
 
@@ -85,4 +84,10 @@ If, by whatever means, you know that individual cells you are encoding can neith
 The only issue — you'd have to sidecar that information to the decoding step somehow.  
 Core NSV does not support this approach whatsoever because it'd overly complicate handling real backslash sequences.  
 And `escape` is already the identity when there's no `\`s, newlines, and the string is non-empty.
+
+Yet another one, a generalisation of the previous.  
+Since encode/decode cleanly decompose into a pair of spills/unspills plus escape/unescape, it is entirely possible to replace the escape/unescape step with anything, as long as it handles LF and the empty string.  
+Then, technically, the pair of spills is defining what could be considered a family of encodings, with swappable escaping logic allowing to use whatever is least likely to have collisions with the data being encoded.  
+For multidimensional ragged data, any escaping that does not do `\\` for escaping the escape character would do great. Sad we're in this world and not one where people know better than using escape character in its own escape sequence.  
+For anything regex-heavy, or TeX, any escaping that doesn't make `\` special would do.
 

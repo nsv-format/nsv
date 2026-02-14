@@ -2,7 +2,7 @@
 
 # Newline-separated values
 
-Implementations/installation instuctions are at the bottom of this file.
+Implementations/installation instructions are at the bottom of this file.
 
 ## Why? (advantages)
 
@@ -70,7 +70,7 @@ Newlines are 'line' boundaries.
 Empty 'lines' are 'row lines' boundaries.  
 Non-empty 'lines' are escaped 'cell' content.
 
-The general parsing rule ("simple rule" hereafter) is as following
+The general parsing rule ("simple rule" hereafter) is as follows
 1. Accumulate characters into a buffer until newline
 2. If the buffer is empty: complete the current row
 3. If the buffer is non-empty: unescape buffer, add to current row as cell
@@ -131,7 +131,7 @@ Readers MAY emit the incomplete cell/row.
  col1 | col2 
 :----:|:----:
   a   |  b   
-  c   |  c   
+  c   |  d   
 
 ```csv
 col1,col2
@@ -164,18 +164,32 @@ missing ->
 <- missing
 
 Roses are red\nViolets are blue\nThis may be pain\nBut CSV would be, too
-Tab\tseparated\tvalues\n(would be left as-is normally)
+^\nmissing
 Not a newline: \\n
 ```
 
-This would roughly correspond to the following Markdown table (NSV is not a table though, and Markdown doesn't support tables without column names)
+GitHub would not render ragged HTML tables correctly; rows 1–2 only have two cells.
 
- 0                                                                              | 1                                                        | 2                 
---------------------------------------------------------------------------------|----------------------------------------------------------|-------------------
- first                                                                          | row                                                      
- second                                                                         | row                                                      
- missing ->                                                                     |                                                          | <- missing        
- Roses are red<br>Violets are blue<br>This may be pain<br>But CSV would be, too | Tab\tseparated\tvalues<br>(would be left as-is normally) | Not a newline: \n 
+<table>
+  <tr>
+    <td>first</td>
+    <td>row</td>
+  </tr>
+  <tr>
+    <td>second</td>
+    <td>row</td>
+  </tr>
+  <tr>
+    <td>missing -></td>
+    <td></td>
+    <td>&lt;- missing</td>
+  </tr>
+  <tr>
+    <td>Roses are red<br>Violets are blue<br>This may be pain<br>But CSV would be, too</td>
+    <td>^<br>missing</td>
+    <td>Not a newline: \n</td>
+  </tr>
+</table>
 
 ## Extras
 

@@ -27,11 +27,12 @@ The operation itself is simple: we "spill" structure into the flattened sequence
 Inverse of `spill`. Picks up the termination tokens from the sequence and uses them to recover the original structure.
 
 `escape: String → E[Seq[E[Char, '\n']], '']`
-This `escape` is a very concrete operation, it is exactly the escaping rule as defined in the NSV spec.  
+This `escape` is, strictly speaking, a mapping rather than an escaping operation, as it must also map the empty string to a sentinel.  
 Maps into a set of non-empty strings that cannot contain newline characters.  
+The escaping rule as defined in the NSV spec is a special case of this operation, chosen for human readability and momentum.
 
 `unescape`  
-Inverse of `escape`.
+Left inverse of `escape`.
 
 `encode: Seq[Seq[String]] → String`  
 The entirety of NSV encode, take the input seqseq, produce the serialisation.
@@ -48,6 +49,9 @@ With definitions as above, `encode` is exactly
 Trivially, it was possible to use the same token for both levels, and repeat a simpler escaping schema, but I do not believe a readable variant exists among such encodings.
 
 `decode = map(map(unescape)) ∘ unspill[String, ''] ∘ unspill[Char, '\n']`
+
+Note that `unspill` does not depend on the escaping scheme — structure recovery precedes unescaping.  
+Any mapping whose outputs are non-empty and LF-free is compatible.
 
 ### Repeated application
 

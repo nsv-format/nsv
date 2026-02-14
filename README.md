@@ -1,6 +1,6 @@
-# Newline-separated values
+<a href="https://creativecommons.org/licenses/by-nd/4.0/"><img src="https://licensebuttons.net/l/by-nd/4.0/88x31.png" height="16" alt="CC BY-ND 4.0"></a> naming · <a href="https://nsv-format.org">nsv-format.org</a>
 
-STATUS: Request for Comments
+# Newline-separated values
 
 Implementations/installation instuctions are at the bottom of this file.
 
@@ -216,6 +216,8 @@ Since LF, `\`, and `n` are the only anyhow special bytes in the format, any enco
 This includes UTF-8, of course, but is very much not limited to it.
 
 ## Implementations
+
+All implementations are licensed under MIT.
 
 Repository | Language | Installation | Notes
 --- | --- | --- | ---

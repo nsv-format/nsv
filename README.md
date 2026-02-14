@@ -229,3 +229,6 @@ Repository | Language | Installation | Notes
 If you have ideas on how to make any of these more ergonomic or feel like implementing a brutally optimised version, I very much welcome that.
 <!-- Of mine, I mostly used the Python and the Scala versions. I did use NSV with JavaScript, but parsers were ad hoc in projects' code. -->
 
+---
+
+namingより

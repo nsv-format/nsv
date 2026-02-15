@@ -16,43 +16,50 @@ This is not yet a specification, but a collection of drafts on the matter.
 They have reached a point where there's a certain level of consistent vision, and that is what I am describing here.
 
 The story begins with defining an NSV-aware operation on a seqseq.  
-Terms are used according to their definition in the core spec.
-
-NOTE: The `lift` section is now outdated, to be reformulated via `spill`, as defined in [properties](./properties.md).
+Terms are used according to their definition in the [core spec](./README.md) and the [properties](./properties.md).
 
 #### Lift/unlift
 
 Lift is an operation on a 'seqseq' that produces 'row lines' containing flattened data.  
-So it takes a `Seq[Seq[String]]` and produces a `Seq[String]`, removing one dimension (without losing structural information!).
+It takes a `Seq[Seq[String]]` and produces a `Seq[String]`, removing one dimension (without losing structural information!).
 
 The rule is as follows
 1. Apply escaping to every cell in every row
 2. Chain the escaped cells, interleaving empty cells where row boundaries were
+  1. Note that contrary to core NSV, this implies separator semantics, with the post-lift row's boundary serving as the final terminator
 
 Unlift is the inverse, so
-1. Walk element-by-element
-2. If current element is non-empty, unescape it and append to the current row
-3. If current element is empty, terminate the current row
+1. Walk the `Seq[String]` element-by-element
+2. If the current element is non-empty, unescape it and append to the current row
+3. If the current element is empty, terminate the current row
+
+In terms of `spill`, as defined in [properties](./properties.md),  
+`lift = init ∘ spill[String, ''] ∘ map(map(escape))`  
+where `init` discards the last element (guaranteed to be the empty string after `spill` application).
+
+The reason for discarding the final terminator is that it makes lift/unlift operations line number-preserving.  
+This property is useful for operations in IDEs/text editors that operate on multiple selected lines (think "comment selected lines").
 
 There're multiple ways to think about it, some are
 - in terms of array operations, this one is close to flatten/ravel, except we inject delimiters into the flattened sequence, instead of preserving shape data separately (can't do that with ragged rows without losing human editability)
   - do note that we do NOT encode 'rows as cells'
-- we reinterpret the same data as a sequence of lines instead of parsing it as NSV, then encode it as a single row (not as a single-element seqseq! no 'empty cell' after the last element)
+- we reinterpret the same data as a sequence of unescaped 'lines' instead of parsing it as NSV, then encode it as a single 'row' (not as a single-element seqseq! no 'empty cell' after the last element)
 
 The 'effect' of applying lift is that we get to combine multiple rows into one in a reversable way.  
 Why is that important? Because conventionally, the metadata is the first 'row' of the data.  
 That means, we now have the options to both store metadata as a regular NSV (e.g. in a separate file), and as just a regular row (from core NSV parser's perspective) in the file itself.  
 
 Everything in the ENSV that follows is but an 'interpretation' of data in a seqseq, with the metadata format not having a separate parser.  
-In other words, ENSV is agnostic of the files themselves, and operates on the level of encoding to and from a `Seq[Seq[String]]`.
+In other words, ENSV is agnostic of the files themselves, and operates on the level of encoding to and from a `Seq[Seq[String]]`.  
+It would, of course, be parsing the individual `String`s of said seqseq.
 
 Ah, almost forgot, any ENSV is a valid NSV, can just skip the first row and get the data.  
-A little more involved when metadata is interleaved, but that's a rare case, and also manageable.
+A little more involved when metadata is interleaved, but that's a more special case, and also manageable.
 
 #### Forms
 
 Finally, something that is not newline this, newline that.  
-The way I think about introducing extensible metadata is by defining a number 'forms', with rules like 'ignore unknown forms' for forward compatibility, and rules like 'rename when changing semantics' for backwards compatibility.  
+The way I think about introducing extensible metadata is by defining a number 'forms', with rules like 'ignore unknown forms' for forward compatibility, and rules like 'rename when changing semantics' for backwards compatibility. <!-- I know compat is not that simple 😭 -->  
 This, of course, is inspired by Lisps. What I plan not to borrow from Lisps are parentheses, and here's the plan.  
 In a way, NSV already represents a 'tree', except it is a 'truncated' tree with all leaves (cells) being at depth 2.  
 As long as we keep metadata to nesting no deeper than 1–2 levels, we should be able to represent what parens would as NSV's structure itself.
@@ -89,8 +96,11 @@ Row forms
 - a form to define rules for packing/unpacking multiple fields in one cells
   - useful e.g. for log layouts where wasting a line for each field is a damn waste
 
+A 'column' is the set of all 'cells' at a given offset across all 'rows'.  
+That is, column names and types should be available for generic seqseqs just as they are for the 'tables'.
+
 As for distinguishing between cell and row forms, since they're all defined a priori, there can be no ambiguity.  
-For readability, a convention like "all row form named should end on `:`" would suffice.
+For readability, a convention like "all row form names should end on `:`" would suffice.
 
 ---
 

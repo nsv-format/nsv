@@ -20,7 +20,7 @@ Terms are used according to their definition in the [core spec](./README.md) and
 
 #### Lift/unlift
 
-Lift is an operation on a 'seqseq' that produces 'row lines' containing flattened data.  
+Lift is an operation on a non-empty 'seqseq' that produces 'row lines' containing flattened data.  
 It takes a `Seq[Seq[String]]` and produces a `Seq[String]`, removing one dimension (without losing structural information!).
 
 The rule is as follows
@@ -32,20 +32,22 @@ Unlift is the inverse, so
 1. Walk the `Seq[String]` element-by-element
 2. If the current element is non-empty, unescape it and append to the current row
 3. If the current element is empty, terminate the current row
+4. At end of input, terminate the current row
 
 In terms of `spill`, as defined in [properties](./properties.md),  
 `lift = init ∘ spill[String, ''] ∘ map(map(escape))`  
 where `init` discards the last element (guaranteed to be the empty string after `spill` application).
 
 The reason for discarding the final terminator is that it makes lift/unlift operations line number-preserving.  
-This property is useful for operations in IDEs/text editors that operate on multiple selected lines (think "comment selected lines").
+This property is useful for operations in IDEs/text editors that operate on multiple selected lines (think "comment selected lines").  
+This comes at the cost of making `[]` irrepresentable, a sacrifice we're willing to make.
 
 There're multiple ways to think about it, some are
 - in terms of array operations, this one is close to flatten/ravel, except we inject delimiters into the flattened sequence, instead of preserving shape data separately (can't do that with ragged rows without losing human editability)
   - do note that we do NOT encode 'rows as cells'
 - we reinterpret the same data as a sequence of unescaped 'lines' instead of parsing it as NSV, then encode it as a single 'row' (not as a single-element seqseq! no 'empty cell' after the last element)
 
-The 'effect' of applying lift is that we get to combine multiple rows into one in a reversable way.  
+The 'effect' of applying lift is that we get to combine multiple rows into one in a reversible way.  
 Why is that important? Because conventionally, the metadata is the first 'row' of the data.  
 That means, we now have the options to both store metadata as a regular NSV (e.g. in a separate file), and as just a regular row (from core NSV parser's perspective) in the file itself.  
 
@@ -87,13 +89,13 @@ Cell forms
 - a form to indicate that in-cell comments are enabled and to provide the delimiter
 - a form to specify the number of data rows that are to follow
   - useful for multiplexing in a stream, or to represent heterogenous data in a file (e.g. a list of nodes followed by a list of edges)
-- a form to specify a version of the ENVS metadata itself (still unsure if I'd need this)
+- a form to specify a version of the ENSV metadata itself (still unsure if I'd need this)
 
 Row forms
 - a form to provide column names (vertical)
 - a form to provide column types (vertical)
 - a form to provide column name-type pairs (vertical)
-- a form to define rules for packing/unpacking multiple fields in one cells
+- a form to define rules for packing/unpacking multiple fields in one cell
   - useful e.g. for log layouts where wasting a line for each field is a damn waste
 
 A 'column' is the set of all 'cells' at a given offset across all 'rows'.  

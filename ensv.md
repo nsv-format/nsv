@@ -40,7 +40,8 @@ where `init` discards the last element (guaranteed to be the empty string after 
 
 The reason for discarding the final terminator is that it makes lift/unlift operations line number-preserving.  
 This property is useful for operations in IDEs/text editors that operate on multiple selected lines (think "comment selected lines").  
-This comes at the cost of making `[]` irrepresentable, a sacrifice we're willing to make.
+This comes at the cost of making `[]` irrepresentable, a sacrifice we're willing to make.  
+Note that when applied to a line range, `lift` is equivalent to simply applying escape to every 'line' (the proof is left to the reader).
 
 There're multiple ways to think about it, some are
 - in terms of array operations, this one is close to flatten/ravel, except we inject delimiters into the flattened sequence, instead of preserving shape data separately (can't do that with ragged rows without losing human editability)

@@ -95,3 +95,7 @@ Then, technically, the pair of spills is defining what could be considered a fam
 For multidimensional ragged data, any escaping that does not do `\\` for escaping the escape character would do great. Sad we're in this world and not one where people know better than using escape character in its own escape sequence.  
 For anything regex-heavy, or TeX, any escaping that doesn't make `\` special would do.
 
+Minor, but the decomposition itself _could_ have been framed as `spill ∘ escape ∘ spill ∘ escape`.  
+While cleaner from math perspective, it diverges too far from any implementation doing both "escapes" as one.  
+It is still helpful when thinking about half-ready data, i.e. data types that are non-empty in all cases or are LF-free but not both.
+

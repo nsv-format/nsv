@@ -53,10 +53,11 @@ Why is that important? Because conventionally, the metadata is the first 'row' o
 That means, we now have the options to both store metadata as a regular NSV (e.g. in a separate file), and as just a regular row (from core NSV parser's perspective) in the file itself.  
 
 Everything in the ENSV that follows is but an 'interpretation' of data in a seqseq, with the metadata format not having a separate parser.  
-In other words, ENSV is agnostic of the files themselves, and operates on the level of encoding to and from a `Seq[Seq[String]]`.  
+In other words, ENSV is agnostic of the files themselves, and operates on the level of encoding to and from a `Seq[Seq[String]]` (but that prior to applying unescape).  
 It would, of course, be parsing the individual `String`s of said seqseq.
 
-Ah, almost forgot, any ENSV is a valid NSV, can just skip the first row and get the data.  
+Ah, almost forgot, any ENSV is a structurally valid NSV, i.e. row and cell boundaries are always recoverable regardless of the escaping rule in use.  
+Under the default escaping rule, one can skip the first row and read the data as plain NSV.  
 A little more involved when metadata is interleaved, but that's a more special case, and also manageable.
 
 #### Forms

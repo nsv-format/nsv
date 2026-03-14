@@ -230,3 +230,44 @@ Jokes aside, it was tempting proposition since it would make files more lean, re
 But that complicated the rule (have to think if you have to escape a backslash).  
 It was also a good point to note that the concerns were mostly related to issues outside of NSV's design scope, and ones entirely manageable by extension formats.
 
+## Bad ideas, ENSV edition
+
+With core NSV design frozen, the sections above stopped growing.  
+In the meantime, I've visited quite a few dead ends trying to shape ENSV design into something reasonable, and those seem to belong here.
+
+### Lift everything
+
+The original idea for how to put metadata on top of NSV without interfering with the core format was using the `lift` operation.  
+This has the attractive property of forcing all metadata into a single paragraph/row, which makes it trivial for naive NSV readers to discard.
+
+It, of course, would come at the cost of having to escape all contents twice.  
+Being in control of what metadata would look like, I thought that simply avoiding characters that would need escaping throughout would suffice.  
+But there are notable cases where it is not the case, the biggest one being arbitrary comments and field descriptions, which would be user-written and outside of my control.
+
+I am admittedly fond of lift as an operation.  
+It is enabled by the structure of the format, and not meaningfully attainable in plain text table formats.  
+It took me quite a while to notice that at the point of giving up on `[]` vs `[[]]` representability for forms (to enable lifting), I've freed the empty row, which is the most natural extension for `spill`, extending it to one more dimension.  
+Moreover, and simpler than that, the fact that having a form expressly signalling "end of metadata", like `---` from the pre-ENSV design, was always on the table, completely eluded me.  
+
+I'm still in doubt as to whether I would go for the empty row or the horizontal rule as the end-of-metadata signal, or allow both.  
+But at the very least, lift can now stay as a trick only applicable inside of some forms, notably those least needing escaping.  
+And pure NSV readers can still "skip to the first empty row".
+
+### Cell forms
+
+Another point I am giving up on is having forms of different shapes.  
+I used to think that having a separate syntax for simpler forms, ones that could always fit in a single line, would allow for better use of space, and thus better readability.  
+I still think having different ways of describing the data for different desired levels of detail is a good idea, just not that it would require a separate shape.
+
+Aside from the complexity this heterogeneity would introduce, it was unclear where to fit them, and having them allowed everywhere would lead to some writers placing them very arbitrarily.  
+And since they would mostly be touching global properties, having them colocated in a row form would make most sense.
+
+#### Horizontal forms for column names and types
+
+In retrospect, I don't understand why I even thought it would be a good idea.  
+If you align two horizontal sequences, you could express (constrained) names and types as columns.  
+But whose eye is even trained to look _down_ for the type annotation?  
+And why would anyone use NSV and not just true CSV (i.e. splittable on newlines and commas alone, no escaping) for a _typed, few-column_ table?
+
+And if anyone ever wanted to only have column names as metadata — NSV alone is sufficient for that, just spend the first row on column names.
+

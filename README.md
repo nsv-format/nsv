@@ -55,7 +55,7 @@ Terms
 - 'row' is an individual nested sequence
 - 'cell' is an individual element of a 'row'
 - 'line' is a sequence of characters between newlines
-  - 'row lines' are the sequence of lines matching a row
+  - 'row lines' are the sequence of lines corresponding to a row
 - 'table' is a seqseq such that the length of all of its 'rows' is the same
   - 'row' and 'cell' are terms used even when the seqseq is not a 'table'
 - 'newline' is the LF character

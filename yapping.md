@@ -248,6 +248,7 @@ I am admittedly fond of lift as an operation.
 It is enabled by the structure of the format, and not meaningfully attainable in plain text table formats.  
 It took me quite a while to notice that at the point of giving up on `[]` vs `[[]]` representability for forms (to enable lifting), I've freed the empty row, which is the most natural extension for `spill`, extending it to one more dimension.  
 Moreover, and simpler than that, the fact that having a form expressly signalling "end of metadata", like `---` from the pre-ENSV design, was always on the table, completely eluded me.  
+I now lean towards a design where the empty row designates end of metadata, with the horizontal rule being a no-op form that can be used before that in readability-centric scenarios.
 
 I'm still in doubt as to whether I would go for the empty row or the horizontal rule as the end-of-metadata signal, or allow both.  
 But at the very least, lift can now stay as a trick only applicable inside of some forms, notably those least needing escaping.  

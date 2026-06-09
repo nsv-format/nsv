@@ -2,7 +2,7 @@
 
 # Newline-separated values
 
-Implementations/installation instructions are at the bottom of this file.
+Implementations, integrations, and their installation instructions are [here](./implementations.md).
 
 ## Why? (advantages)
 
@@ -228,20 +228,6 @@ Another case would be providing good ergonomics. Resumable (e.g. streaming, tail
 
 Since LF, `\`, and `n` are the only anyhow special bytes in the format, any encoding using the same bytes to represent these as ASCII, and does not use these bytes anywhere else, would work with NSV.  
 This includes UTF-8, of course, but is very much not limited to it.
-
-## Implementations
-
-All implementations are licensed under MIT.
-
-Repository | Language | Installation | Notes
---- | --- | --- | ---
-[nsv-format/nsv-python](https://github.com/nsv-format/nsv-python) | Python | `pip install nsv` | Can patch itself onto Pandas (no type narrowing though)
-[nsv-format/nsv-scala](https://github.com/nsv-format/nsv-scala) | Scala | Not published | String-only, the algo is calque from Python version
-[nsv-format/nsv-rust](https://github.com/nsv-format/nsv-rust) | Rust | `cargo add nsv` | Reasonably fast
-[nsv-format/nsv-js](https://github.com/nsv-format/nsv-js) | JS | `npm install @nsv-format/nsv` | Supports streaming
-
-If you have ideas on how to make any of these more ergonomic or feel like implementing a brutally optimised version, I very much welcome that.
-<!-- Of mine, I mostly used the Python and the Scala versions. I did use NSV with JavaScript, but parsers were ad hoc in projects' code. -->
 
 ---
 

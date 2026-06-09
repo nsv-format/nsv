@@ -54,3 +54,9 @@ In my experience, LLMs tend to grasp the nature of the encoding after just readi
 They sure miss details of the escaping (we did not make it into training data yet), but giving them just the three files in this repo, or any one of the implemenations, has been enough to get them up to speed.  
 And these are short, well worth the tokens.
 
+## As append-only storage
+
+Say you're scraping or otherwise producing some data and need to choose how to store it.  
+NSV would give you a format that is trivially understandable, write to which is trivially parallelizable (write to multiple files and concatenate at the end).  
+Arguably, so would CSV, but see the git diff, readability, editability, and read/write performance points.
+

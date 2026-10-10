@@ -23,6 +23,7 @@ Repository | What it is | Installation | Notes
 --- | --- | --- | ---
 [nsv-format/nsv-cli](https://github.com/nsv-format/nsv-cli) | Standalone utility | `cargo install nsv-cli` | -
 [nsv-format/nsv-duckdb](https://github.com/nsv-format/nsv-duckdb) | DuckDB community extension | `INSTALL nsv FROM community; LOAD nsv;` | Faster than CSV on same data
+[nsv-format/nsv-vim](https://github.com/nsv-format/nsv-vim) | Vim/Neovim runtime files | `vim.pack.add`, or clone into `pack/*/start` | Filetype detection, rudimentary syntax highlighting
 [nsv-format/nsv-format.github.io](https://github.com/nsv-format/nsv-format.github.io) | Web | - | Backs https://nsv-format.github.io
 [nsv-format/nsv-tests](https://github.com/nsv-format/nsv-tests) | Test infrastructure | - | Shared test cases, scheduled verification runs
 
